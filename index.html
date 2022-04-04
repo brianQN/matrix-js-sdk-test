@@ -1,0 +1,48 @@
+<html lang="en">
+<head>
+<title>Test</title>
+<meta charset="utf-8"/>
+<link rel="icon" href="data:,">
+<script src="browser-matrix.js"></script>
+<script src="browserTest.js"></script>
+<script src="olm.js"></script>
+<script src="loginCredentials.js"></script>
+</head>
+<body onload="main()">
+    <br/>
+    Wilkommen beim Test des Matrix SDK<br/>
+    Trage hier deine Matrix-ID-Benutzerdaten ein<br/>
+    (Dabei handelt es sich um die gleichen Login-Daten, die die von Dennis für FluffChat bekommen hast)<br><br>
+    <label>Benutzername:</label><input id="username" type="text" placeholder="benutzername"><br>
+    <label>Passwort:</label><input id="password" type="password"><br>
+    <button id="loginBt">Einloggen</button>
+
+    <div hidden="true" id="afterLogin">
+        <h1>Der Login hat funktioniert</h1><br>
+        <h2>Deine Rooms</h2><br>
+        Hier siehst du alle Rooms, die du hast:<br>
+        <ul id="rooms"></ul><br>
+        <br>
+        Du kannst jetzt Aktionen für diese Räume ausführen.<br>
+        Nachdem du eine Aktion ausgeführt hast, kannst du in FluffyChat nachschauen, ob es auch wirklich funktioniert hat.<br>
+
+        <h3>Sende eine Nachricht an den ausgewählten Room (klappt bisher nur bei unverschlüsselten Räumen)</h3><br>
+        <label>Text der Nachricht</label><input type="text" id="room_msg" placeholder="Hello World"><br>
+        <button id="send_room_msg_bt">senden</button><br><br>
+
+        <h3>Erstelle einen (unverschlüsselten) Room</h3>
+        <label>Name des Rooms</label><input type="text" id="newRoomName" placeholder="My Room"><br>
+        <button id="createRoomBt">Room erstellen</button><br><br>
+
+        <h3>Lösche den ausgewählte Room</h3><br>
+        <button id="deleteGroupBt">Room löschen</button><br><br>
+        
+        <h2>Deine Kontakte</h2>
+        Hier siehst du deine Kontakte. Aktuell sind das nur alle Leute, die in den gleichen Chats wie du sind.
+        <ul id="contacts"></ul><br><br>
+
+
+
+    </div>
+</body>
+</html>
