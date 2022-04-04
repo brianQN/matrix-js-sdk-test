@@ -44,8 +44,24 @@ async function login(username, password){
             setAfterLoginSectionVisible();
             displayRooms(false);
             displayContacts(false);
+
+            client.on("Room.timeline", function(event, room, toStartOfTimeline) {
+                // we know we only want to respond to messages
+                console.log("Mein EVENT: ", event);
+                console.log(room);
+                if (event.getType() == "m.room.message" && event.getContent().body != "") {
+                    const message = event.getContent().body;
+                    const roomName = room.name;
+                    const roomId = event.getRoomId();
+                    const sender = event.getSender();
+                    onMessageArrived(message, sender, roomId, roomName);
+                }
+                
+            });
         }
     });
+
+    
 }
 
 function sendMessage(roomId, messageText){
@@ -196,5 +212,9 @@ function getIdOfSelectedRoom(){
 
 function setAfterLoginSectionVisible(){
     document.getElementById("afterLogin").hidden = false;
+}
+
+function onMessageArrived(message, sender, roomId, roomName){
+    alert(sender + " hat eine Nachricht in " + roomName + " gesendet: " + message);
 }
 
