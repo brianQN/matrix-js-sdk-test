@@ -64,8 +64,8 @@ function forgetRoom(roomId){
     });
 }
 
-function inviteMemberToRoom(roomId, memberId){
-    //Todo: Implement
+function inviteMemberToRoom(roomId, userId){
+    client.invite(userId, roomId);
 }
 
 /* UI */
