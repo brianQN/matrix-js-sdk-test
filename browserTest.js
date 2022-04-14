@@ -7,61 +7,34 @@ let roomsRadioBts = [];
 let membersByNames = {};
 
 function main(){
-
-    if (!Olm) {
-        console.error(
-            "global.Olm does not seem to be present."
-            + " Did you forget to add olm in the lib/ directory?"
-        );
-    }
     initUI();
 }
 
-/* Matrix-SDK-Calling */
-async function login(username, password){
-    let loginClient = matrixcs.createClient(BASE_URL)
-    let loginResult = await loginClient.loginWithPassword(username, password);
+/* Matrix-SDK-Access */
+async function login(url, username, password, callback){
+    client = matrixcs.createClient(url);
 
-    const opts = {
-        baseUrl: BASE_URL,
-        userId: loginResult.user_id,
-        accessToken: loginResult.access_token,
-        deviceId: loginResult.device_id,
-        sessionStore: new matrixcs.WebStorageSessionStore(window.localStorage),
-        cryptoStore: new matrixcs.MemoryCryptoStore(),
-    }
-    client = matrixcs.createClient(opts);
-
-    
     await client.loginWithPassword(username, password);
-    await client.initCrypto();
     await client.startClient();
 
     await client.once('sync', function(state, prevState, res) {
-        console.log(state);
         if (state == "PREPARED") {
-            client.setGlobalErrorOnUnknownDevices(false);
-            setAfterLoginSectionVisible();
-            displayRooms(false);
-            displayContacts(false);
-
-            client.on("Room.timeline", function(event, room, toStartOfTimeline) {
-                // we know we only want to respond to messages
-                console.log("Mein EVENT: ", event);
-                console.log(room);
-                if (event.getType() == "m.room.message" && event.getContent().body != "") {
-                    const message = event.getContent().body;
-                    const roomName = room.name;
-                    const roomId = event.getRoomId();
-                    const sender = event.getSender();
-                    onMessageArrived(message, sender, roomId, roomName);
-                }
-                
-            });
+            callback();
         }
     });
+}
 
-    
+function addMessageReceiveCallback(callback){
+    client.on("Room.timeline", function(event, room, toStartOfTimeline) {
+        if (event.getType() == "m.room.message" && event.getContent().body != "") {
+            const message = event.getContent().body;
+            const roomName = room.name;
+            const roomId = event.getRoomId();
+            const sender = event.getSender();
+            callback(message, sender, roomId, roomName);
+        }
+        
+    });
 }
 
 function sendMessage(roomId, messageText){
@@ -74,14 +47,13 @@ function sendMessage(roomId, messageText){
     );
 }
 
-async function createRoom(roomName){
+async function createRoom(roomName, callback){
     const options = {
         topic: "Dies ist ein Raum zum Testen",
         name: roomName
     }
     let result = await client.createRoom(options);
-    displayRooms(true);
-    return result.roomId;
+    callback(result.roomId);
 }
 
 function forgetRoom(roomId){
@@ -91,13 +63,14 @@ function forgetRoom(roomId){
     });
 }
 
-/* UI Stuff */
+/* UI */
 function initUI(){
     const loginNameTxtField = document.getElementById("username");
-    loginNameTxtField.value = loginCredentials.username;
-
     const loginPwTxtField = document.getElementById("password");
-    loginPwTxtField.value = loginCredentials.password;
+    if (loginCredentials) {
+        loginNameTxtField.value = loginCredentials.username;
+        loginPwTxtField.value = loginCredentials.password;
+    }
 
     const createRoomTxtField = document.getElementById("newRoomName");
 
@@ -105,12 +78,21 @@ function initUI(){
 
     const createRoomBt = document.getElementById("createRoomBt");
     createRoomBt.addEventListener("click", function(){
-        createRoom(createRoomTxtField.value);
+        createRoom(createRoomTxtField.value, function(){
+            displayRooms(true);
+        });
     });
+
+    function onLoggedInCallback(){
+        setAfterLoginSectionVisible();
+        displayRooms(false);
+        displayContacts(false);
+        addMessageReceiveCallback(onMessageArrived);
+    }
 
     const loginBt = document.getElementById("loginBt");
     loginBt.addEventListener("click", function(){
-        login(loginNameTxtField.value, loginPwTxtField.value);
+        login(BASE_URL, loginNameTxtField.value, loginPwTxtField.value, onLoggedInCallback);
     });   
 
     const sendRoomMsgBt = document.getElementById("send_room_msg_bt");
@@ -151,10 +133,8 @@ function displayRooms(sync){
         }
         const rooms = client.getRooms();
         rooms.forEach(room => {
-            console.log("Roomid: ", room.roomId, "Roomname: ", room.name)
             displayRoomOnPage(room.name, room.roomId);
         });
-        console.log("called")
     }
     roomsRadioBts = [];
     roomIdsByNames = {};
@@ -187,7 +167,6 @@ function displayContacts(sync){
         rooms.forEach(room => {
             const members = room.getJoinedMembers();
             members.forEach(member => {
-                console.log(member);
                 displayUserOnPage(member);
             })            
         });
