@@ -5,6 +5,7 @@ let client;
 let roomIdsByNames = {};
 let roomsRadioBts = [];
 let membersByNames = {};
+let memberRadioBts = [];
 
 function main(){
     initUI();
@@ -63,6 +64,10 @@ function forgetRoom(roomId){
     });
 }
 
+function inviteMemberToRoom(roomId, memberId){
+    //Todo: Implement
+}
+
 /* UI */
 function initUI(){
     const loginNameTxtField = document.getElementById("username");
@@ -107,6 +112,13 @@ function initUI(){
         const roomId = getIdOfSelectedRoom();
         forgetRoom(roomId);
     });
+
+    const inviteToRoomBt = document.getElementById("inviteBt");
+    inviteToRoomBt.addEventListener("click", function(){
+        const memberId = getIdOfSelectedMember();
+        const roomId = getIdOfSelectedRoom();
+        inviteMemberToRoom(memberId, roomId);
+    })
 }
 
 function displayRooms(sync){
@@ -158,11 +170,19 @@ function displayContacts(sync){
             membersByNames[userName] = member;
 
             let contactElem = document.createElement("li");
+            const contactBt = document.createElement("input");
+            contactBt.type = "radio";
+            contactBt.name = "member";
+            contactBt.value = member.userId;
+            memberRadioBts.push(contactBt);
+
             contactElem.innerHTML = userName;
+            contactElem.appendChild(contactBt);
             contactListElem.appendChild(contactElem);
         }
 
         membersByNames = {};
+        memberRadioBts = [];
         const rooms = client.getRooms();
         rooms.forEach(room => {
             const members = room.getJoinedMembers();
@@ -187,6 +207,16 @@ function getIdOfSelectedRoom(){
         }
     });
     return roomId;
+}
+
+function getIdOfSelectedMember(){
+    let memberId = null;
+    memberRadioBts.forEach(memberRadioBt => {
+        if (memberRadioBt.checked) {
+            memberId = memberRadioBt.value;
+        }
+    });
+    return memberId;
 }
 
 function setAfterLoginSectionVisible(){
